@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScaffoldAI Physics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f5f1e8; --card:#fffdf8; --ink:#1f2a2c; --muted:#5d6a6b; --line:#ddd5c4; --line2:#ebe5d8;
+  --teal:#0f6b67; --teal-soft:#d9ece9; --amber:#b97512; --amber-soft:#f6e6c8;
+  --red:#a8432f; --red-soft:#f4dcd4; --green:#3d7a4b; --green-soft:#dcebdc; --blue:#2f5f8f; --blue-soft:#dde7f1;
+  --shadow:0 1px 0 rgba(31,42,44,.04),0 6px 20px -12px rgba(31,42,44,.25);
+  --serif:'Fraunces',Georgia,serif; --sans:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 var(--sans)}
+body{background-image:linear-gradient(var(--line2) 1px,transparent 1px);background-size:100% 28px}
+h1,h2,h3{font-family:var(--serif);font-weight:650;letter-spacing:-.01em;margin:0 0 .4em}
+h1{font-size:30px} h2{font-size:22px} h3{font-size:17px}
+p{margin:.3em 0 .8em}
+button{font:inherit;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 60px}
+.topbar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--ink);color:#f5f1e8;position:sticky;top:0;z-index:20}
+.brand{font-family:var(--serif);font-size:18px;font-weight:650}
+.brand small{font-family:var(--sans);font-weight:400;opacity:.7;font-size:12px;margin-left:8px}
+.topbar .sp{flex:1}
+.topbar .who{font-size:13px;opacity:.85}
+.linkbtn{background:none;border:1px solid rgba(245,241,232,.35);color:#f5f1e8;border-radius:6px;padding:4px 10px;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:var(--shadow)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px;align-items:start}
+.stack>*+*{margin-top:14px}
+.muted{color:var(--muted)} .small{font-size:13px} .mono{font-family:var(--mono)}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);font-weight:600}
+.btn{border:0;border-radius:8px;padding:10px 18px;font-weight:600;background:var(--teal);color:#fff;transition:transform .05s,opacity .15s}
+.btn:active{transform:translateY(1px)} .btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--teal);border:1.5px solid var(--teal)}
+.btn.amber{background:var(--amber)} .btn.red{background:var(--red)} .btn.sm{padding:6px 12px;font-size:13px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+label.fld{display:block;font-weight:600;font-size:13px;margin:10px 0 4px}
+input[type=text],input[type=password],textarea,select{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:9px 11px;background:#fff;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--teal)}
+textarea{min-height:90px;resize:vertical;line-height:1.5}
+.hidden{display:none!important}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600}
+.pill.priority{background:var(--red-soft);color:var(--red)} .pill.developing{background:var(--amber-soft);color:#8a5608}
+.pill.secure{background:var(--green-soft);color:var(--green)} .pill.none{background:#eee;color:#777}
+.pill.teal{background:var(--teal-soft);color:var(--teal)}
+.notice{border-left:4px solid var(--amber);background:var(--amber-soft);padding:10px 14px;border-radius:6px;font-size:14px}
+.notice.teal{border-color:var(--teal);background:var(--teal-soft)} .notice.red{border-color:var(--red);background:var(--red-soft)}
+.notice.green{border-color:var(--green);background:var(--green-soft)}
+/* landing */
+.hero{display:grid;grid-template-columns:1.2fr 1fr;gap:28px;align-items:center;margin:20px 0 26px}
+.hero h1{font-size:40px;line-height:1.08}
+.phases{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.phase{border-top:3px solid var(--teal);padding-top:8px;font-size:13px}
+.phase b{display:block;font-family:var(--serif);font-size:15px}
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+/* rail */
+.rail{display:flex;gap:4px;margin:4px 0 18px;overflow-x:auto}
+.rail .st{flex:1;min-width:84px;font-size:12px;padding:6px 8px;border-radius:6px;background:#ece6d9;color:var(--muted);white-space:nowrap;text-align:center}
+.rail .st.on{background:var(--ink);color:#fff} .rail .st.done{background:var(--teal-soft);color:var(--teal)}
+/* MCQ */
+.mcq{margin-bottom:18px} .mcq .opts{display:grid;gap:6px;margin-top:8px}
+.opt{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;background:#fff;cursor:pointer}
+.opt input{margin-top:4px} .opt.sel{border-color:var(--teal);background:var(--teal-soft)}
+.opt b{font-family:var(--mono);width:16px}
+.conf{display:flex;gap:6px}
+.conf button{width:40px;height:36px;border-radius:8px;border:1.5px solid var(--line);background:#fff;font-weight:600}
+.conf button.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+.conflab{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);max-width:224px}
+/* challenge */
+.fig{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;margin:10px 0}
+.fig svg{width:100%;height:auto;display:block}
+.part{margin-top:12px} .part .q{font-weight:600;font-size:14px}
+.part .q .mk{font-family:var(--mono);color:var(--muted);font-weight:500;margin-left:6px}
+.feedback{border:1.5px dashed var(--teal);border-radius:10px;padding:14px;background:#f8fcfb}
+.feedback .q{font-family:var(--serif);font-size:17px;margin:4px 0}
+.dots{display:inline-flex;gap:4px;vertical-align:middle}
+.dots i{width:10px;height:10px;border-radius:50%;background:#ddd;display:inline-block}
+.dots i.on{background:var(--teal)}
+.ladder{display:grid;gap:8px}
+.hint{border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;position:relative}
+.hint .tier{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.hint.locked{background:repeating-linear-gradient(-45deg,#f3efe6,#f3efe6 6px,#efe9dc 6px,#efe9dc 12px);color:var(--muted)}
+.hint.open{border-color:var(--amber);background:#fffaf0}
+.hint.open .tier{color:var(--amber)}
+.hint pre{white-space:pre-wrap;font:inherit;margin:4px 0 0}
+.history{font-size:13px;color:var(--muted)}
+.history span{display:inline-block;margin-right:8px;font-family:var(--mono)}
+/* consolidation */
+.cmp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.cmp .col{border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff;font-size:14px}
+.cmp .col h3{font-size:14px;font-family:var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.cmp .col.model{border-color:var(--teal);background:#f6fbfa}
+.cmp pre{white-space:pre-wrap;font:inherit;margin:0}
+.check{list-style:none;padding:0;margin:0}
+.check li{display:grid;grid-template-columns:60px 60px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--line2);font-size:14px}
+.check .h{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600}
+.tick{font-family:var(--mono);font-weight:600} .tick.y{color:var(--green)} .tick.n{color:#bbb}
+ol.worked{padding-left:20px;margin:0} ol.worked li{margin:4px 0}
+canvas.sim{width:100%;height:220px;background:#fff;border:1px solid var(--line);border-radius:10px;display:block}
+/* summary bars */
+.bars{display:grid;gap:6px}
+.bar{display:grid;grid-template-columns:110px 1fr 46px;gap:8px;align-items:center;font-size:13px}
+.bar .tr{height:10px;background:#ece6d9;border-radius:6px;overflow:hidden}
+.bar .fl{height:100%;background:var(--teal);border-radius:6px}
+.bar .fl.first{background:#9bb7b5} .bar .fl.transfer{background:var(--amber)}
+/* teacher */
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tab{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font-weight:600;font-size:13px}
+.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}
+.kpi .v{font-family:var(--serif);font-size:26px;font-weight:650;line-height:1.1}
+.kpi .l{font-size:12px;color:var(--muted)}
+.controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.controls .grp{display:flex;align-items:center;gap:8px;font-size:13px}
+.controls select{width:auto}
+input[type=range]{accent-color:var(--teal)}
+table.hm{width:100%;border-collapse:separate;border-spacing:0 4px;font-size:14px}
+table.hm th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:0 8px}
+table.hm td{padding:8px;background:#fff;border-top:1px solid var(--line2);border-bottom:1px solid var(--line2)}
+table.hm td:first-child{border-left:1px solid var(--line2);border-radius:8px 0 0 8px}
+table.hm td:last-child{border-right:1px solid var(--line2);border-radius:0 8px 8px 0}
+table.hm tr.click{cursor:pointer} table.hm tr.click:hover td{background:#faf7f0}
+table.hm tr.sel td{background:var(--teal-soft)}
+.cell{display:inline-flex;align-items:center;justify-content:center;min-width:64px;padding:4px 8px;border-radius:6px;font-family:var(--mono);font-size:13px}
+.cell.priority{background:var(--red-soft);color:var(--red)} .cell.developing{background:var(--amber-soft);color:#8a5608}
+.cell.secure{background:var(--green-soft);color:var(--green)} .cell.none{background:#f0f0f0;color:#aaa}
+.cell.dim{opacity:.25}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+.legend span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend .p::before{background:var(--red-soft);border:1px solid var(--red)} .legend .d::before{background:var(--amber-soft);border:1px solid var(--amber)}
+.legend .s::before{background:var(--green-soft);border:1px solid var(--green)}
+.dgrid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start}
+.dom{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:#fff}
+.dom .hd{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.kv{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0;font-size:12px}
+.kv div{background:#f7f4ec;border-radius:6px;padding:6px}
+.kv b{display:block;font-family:var(--mono);font-size:14px}
+.mtag{display:inline-block;font-family:var(--mono);font-size:12px;background:var(--red-soft);color:var(--red);border-radius:4px;padding:1px 6px;margin:2px 4px 2px 0}
+.mtag.ok{background:#eee;color:#888;text-decoration:line-through}
+details summary{cursor:pointer;font-size:13px;color:var(--teal);font-weight:600}
+.ev{font-size:13px;border-left:3px solid var(--line);padding:4px 8px;margin:6px 0;background:#fcfbf7}
+.cluster{display:grid;grid-template-columns:54px 1fr 40px;gap:8px;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line2)}
+.cluster .bx{height:8px;background:#ece6d9;border-radius:4px;overflow:hidden}
+.cluster .bx i{display:block;height:100%;background:var(--red)}
+table.plain{width:100%;border-collapse:collapse;font-size:13px}
+table.plain th,table.plain td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line2);vertical-align:top}
+table.plain th{font-size:12px;color:var(--muted)}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;font-size:14px;z-index:50;box-shadow:var(--shadow)}
+.loading{position:fixed;inset:0;background:rgba(245,241,232,.6);display:flex;align-items:center;justify-content:center;z-index:40}
+.spinner{width:38px;height:38px;border:4px solid var(--teal-soft);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.adab{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:26px}
+@media(max-width:860px){
+  .grid2,.hero,.roles,.dgrid,.cmp{grid-template-columns:minmax(0,1fr)!important}
+  .kpis{grid-template-columns:repeat(2,1fr)} .phases{grid-template-columns:1fr 1fr}
+  .hero h1{font-size:30px} .kv{grid-template-columns:repeat(2,1fr)}
+  table.hm{font-size:12px} .cell{min-width:44px}
+  #tHeat{overflow-x:auto} .controls .grp{flex-wrap:wrap} .controls .grp[style]{margin-left:0!important}
+  input[type=range]{width:120px}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">ScaffoldAI Physics<small>Kahfi Academy · Sec 2</small></div>
+  <div class="sp"></div>
+  <div class="who" id="who"></div>
+  <button class="linkbtn hidden" id="exitBtn" onclick="exitApp()">Sign out</button>
+</div>
+
+<div class="wrap">
+  <div id="setupBanner" class="notice red hidden" style="margin-bottom:14px">
+    This page is not connected to its backend. Open it from the Apps Script web-app URL, or set <span class="mono">API_URL</span> in the script to your deployment's <span class="mono">/exec</span> URL.
+  </div>
+
+  <!-- ============ HOME ============ -->
+  <section id="v-home">
+    <div class="hero">
+      <div>
+        <div class="eyebrow">Thermal Physics · Waves · Sound</div>
+        <h1>Struggle first.<br>Then make sense of it.</h1>
+        <p class="muted">You will try real Physics problems before being taught. Getting stuck is expected — it is how the learning starts. Hints open one at a time, only after you have tried.</p>
+        <div class="phases">
+          <div class="phase"><b>1 · Struggle</b>Predict and attempt on your own</div>
+          <div class="phase"><b>2 · Scaffold</b>Up to three graduated hints</div>
+          <div class="phase"><b>3 · Consolidate</b>Compare with the physics</div>
+          <div class="phase"><b>4 · Transfer</b>New problems, no hints</div>
+        </div>
+      </div>
+      <div class="fig" style="padding:14px" id="heroFig"></div>
+    </div>
+    <div class="roles">
+      <div class="card">
+        <h2>Student</h2>
+        <label class="fld" for="sName">Your name</label>
+        <input type="text" id="sName" maxlength="60" autocomplete="name">
+        <label class="fld" for="sClass">Class</label>
+        <input type="text" id="sClass" maxlength="20" placeholder="e.g. 2A">
+        <p class="small muted" style="margin-top:10px">Only your name, class and learning responses are recorded, for your teacher to support you.</p>
+        <button class="btn" onclick="studentStart()">Begin</button>
+      </div>
+      <div class="card">
+        <h2>Teacher</h2>
+        <label class="fld" for="tPass">Dashboard password</label>
+        <input type="password" id="tPass" onkeydown="if(event.key==='Enter')teacherStart()">
+        <p class="small muted" style="margin-top:10px">Concept mastery, misconception clusters, hint dependency and remediation recommendations. Every recommendation is yours to accept, modify or reject.</p>
+        <button class="btn ghost" onclick="teacherStart()">Open dashboard</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STUDENT ============ -->
+  <section id="v-student" class="hidden">
+    <div class="rail" id="rail"></div>
+
+    <!-- Diagnostic -->
+    <div id="s-diag" class="hidden card">
+      <div class="eyebrow">Warm-up · about 3 minutes</div>
+      <h2>What do you already think?</h2>
+      <p class="muted">Three quick questions. There is no penalty — this helps your teacher see where you are starting from.</p>
+      <div id="diagQs"></div>
+      <label class="fld">Before we start: how confident do you feel about Thermal Physics, Waves and Sound?</label>
+      <div class="conf" id="preConf"></div>
+      <div class="conflab"><span>not at all</span><span>very</span></div>
+      <div style="margin-top:16px"><button class="btn" onclick="submitDiag()">Start the challenges</button></div>
+    </div>
+
+    <!-- Challenge -->
+    <div id="s-chal" class="hidden">
+      <div class="grid2">
+        <div class="card">
+          <div class="eyebrow" id="cEyebrow"></div>
+          <h2 id="cTitle"></h2>
+          <div class="fig" id="cFig"></div>
+          <p id="cContext"></p>
+          <p class="small muted" id="cSource"></p>
+        </div>
+        <div class="stack">
+          <div class="card" id="predCard">
+            <div class="eyebrow">Step 1 · Predict</div>
+            <p id="predQ" style="font-weight:600"></p>
+            <div class="opts" id="predOpts" style="display:grid;gap:6px"></div>
+          </div>
+          <div class="card" id="attCard">
+            <div class="row" style="justify-content:space-between">
+              <div class="eyebrow" id="attLabel">Step 2 · Your attempt</div>
+              <div class="history" id="history"></div>
+            </div>
+            <div id="parts"></div>
+            <label class="fld">How confident are you in this answer?</label>
+            <div class="conf" id="attConf"></div>
+            <div class="conflab"><span>guessing</span><span>certain</span></div>
+            <div class="row" style="margin-top:14px">
+              <button class="btn" id="attBtn" onclick="submitAttempt()">Submit attempt</button>
+              <span class="small muted" id="attNote">Write your own reasoning. Partial ideas are welcome.</span>
+            </div>
+          </div>
+          <div class="feedback hidden" id="fbBox"></div>
+          <div class="card hidden" id="probeCard">
+            <div class="eyebrow">Test your idea</div>
+            <p class="q" id="probeQ" style="font-family:var(--serif);font-size:17px"></p>
+            <textarea id="probeA" placeholder="Explain your reasoning…"></textarea>
+            <div style="margin-top:10px"><button class="btn" onclick="submitProbe()">Submit and compare with the physics</button></div>
+          </div>
+          <div class="card" id="hintCard">
+            <div class="row" style="justify-content:space-between">
+              <div class="eyebrow">Hints</div>
+              <button class="btn amber sm" id="hintBtn" onclick="openHint()" disabled>Open next hint</button>
+            </div>
+            <p class="small muted" id="hintRule">Hints unlock after your first attempt. Each new hint needs a revised attempt.</p>
+            <div class="ladder" id="ladder"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Consolidation -->
+    <div id="s-cons" class="hidden">
+      <div class="card stack">
+        <div>
+          <div class="eyebrow" id="kEyebrow"></div>
+          <h2>Now compare your thinking with the physics</h2>
+          <p class="muted" id="kIntro"></p>
+        </div>
+        <div class="cmp">
+          <div class="col"><h3>Your first attempt</h3><pre id="kFirst"></pre></div>
+          <div class="col"><h3>Your final attempt</h3><pre id="kLast"></pre></div>
+          <div class="col model"><h3>Scientific explanation</h3><pre id="kModel"></pre></div>
+        </div>
+        <div class="grid2">
+          <div>
+            <h3>Key ideas — did your answers have them?</h3>
+            <ul class="check" id="kCheck"></ul>
+            <div id="kMis" style="margin-top:12px"></div>
+          </div>
+          <div>
+            <h3>See it happen</h3>
+            <canvas class="sim" id="sim" width="640" height="260"></canvas>
+            <p class="small muted" id="simCap"></p>
+          </div>
+        </div>
+        <div>
+          <h3>Worked reasoning</h3>
+          <ol class="worked" id="kWorked"></ol>
+        </div>
+        <div>
+          <label class="fld" for="kSelf">In your own words: what would you change in your FIRST answer, and why?</label>
+          <textarea id="kSelf"></textarea>
+          <div style="margin-top:10px"><button class="btn" onclick="submitCons()">Continue</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transfer -->
+    <div id="s-trans" class="hidden card">
+      <div class="eyebrow">Transfer · no hints</div>
+      <h2>Use what you have learned in new situations</h2>
+      <p class="muted">Work on your own. These questions are different from the ones you practised.</p>
+      <div id="transQs"></div>
+      <button class="btn" onclick="submitTransfer()">Submit transfer answers</button>
+    </div>
+
+    <!-- Reflection -->
+    <div id="s-refl" class="hidden card">
+      <div class="eyebrow">Reflection</div>
+      <h2>What changed in your thinking today?</h2>
+      <p class="muted">Think about an idea you held at the start that you see differently now.</p>
+      <textarea id="rText" style="min-height:120px"></textarea>
+      <label class="fld">How confident do you feel now about Thermal Physics, Waves and Sound?</label>
+      <div class="conf" id="postConf"></div>
+      <div class="conflab"><span>not at all</span><span>very</span></div>
+      <div style="margin-top:14px"><button class="btn" onclick="submitReflection()">See my learning summary</button></div>
+    </div>
+
+    <!-- Summary -->
+    <div id="s-sum" class="hidden card"></div>
+  </section>
+
+  <!-- ============ TEACHER ============ -->
+  <section id="v-teacher" class="hidden">
+    <div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <div><div class="eyebrow">Teacher orchestration</div><h1 style="margin:0">Class overview</h1></div>
+      <div class="tabs">
+        <button class="tab on" data-tab="overview" onclick="tTab('overview')">Overview</button>
+        <button class="tab" data-tab="interventions" onclick="tTab('interventions')">Interventions</button>
+        <button class="tab" data-tab="curriculum" onclick="tTab('curriculum')">Curriculum map</button>
+      </div>
+    </div>
+
+    <div id="t-overview">
+      <div class="controls card" style="padding:12px 16px">
+        <div class="grp">Class <select id="tClass" onchange="loadDash()"></select></div>
+        <div class="grp">Concept
+          <span class="tabs" style="margin:0" id="tConcept"></span>
+        </div>
+        <div class="grp">Intervention threshold
+          <input type="range" id="tThr" min="30" max="90" step="5" value="60" oninput="renderDash()">
+          <b class="mono" id="tThrV">60%</b>
+        </div>
+        <div class="grp" style="margin-left:auto">
+          <button class="btn ghost sm" onclick="loadDash()">Refresh</button>
+          <a id="tSheet" class="small" target="_blank" rel="noopener">Open data sheet</a>
+        </div>
+      </div>
+      <div class="kpis" id="tKpis" style="margin-top:12px"></div>
+      <div class="dgrid">
+        <div class="card">
+          <h3>Concept mastery heatmap</h3>
+          <div id="tHeat"></div>
+          <div class="legend"><span class="p">Priority</span><span class="d">Developing</span><span class="s">Secure</span><span>⚑ escalation flag</span></div>
+          <p class="small muted" style="margin-top:8px">Mastery = 15% diagnostic + 15% first attempt + 25% final attempt + 45% independent transfer. Hint use is shown, not penalised: status combines low mastery, failed transfer and misconceptions that persist after Hint 3.</p>
+        </div>
+        <div class="stack">
+          <div class="card" id="tDetail"><p class="muted">Select a student to see their learning evidence and recommended remediation.</p></div>
+          <div class="card"><h3>Misconception clusters</h3><div id="tClusters"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="t-interventions" class="hidden card">
+      <h3>Intervention history</h3>
+      <p class="small muted">Record the follow-up assessment outcome to close the loop and see whether remediation worked.</p>
+      <div id="tIvList"></div>
+    </div>
+
+    <div id="t-curriculum" class="hidden" ></div>
+  </section>
+
+  <div class="adab">ScaffoldAI is a learning aid, not a judge of ability. It records evidence on specific concepts; teachers make every instructional decision. Built with <i>amanah</i> for learner data and <i>tabayyun</i> — verifying before concluding.</div>
+</div>
+
+<div class="loading hidden" id="loading"><div class="spinner"></div></div>
+
+<script>
+/* ===================== Transport ===================== */
+// If this page is hosted outside Apps Script, paste your web-app /exec URL here.
+const API_URL = 'https://script.google.com/macros/s/AKfycbz527ZAV5y10jxxKzVU0fLGsjMxIJGiG1I7e8sOYf0ysXqzfaE9TbuHGdU0ZFqp_0qOBQ/exec';
+
+const HAS_GAS = typeof google !== 'undefined' && google.script && google.script.run;
+function api(fn, ...args) {
+  return new Promise((resolve, reject) => {
+    const done = r => r && r.ok ? resolve(r.data) : reject(new Error((r && r.error) || 'Request failed'));
+    if (HAS_GAS) {
+      google.script.run.withSuccessHandler(done).withFailureHandler(e => reject(e)).apiDispatch(fn, args);
+    } else if (API_URL) {
+      fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args }) })
+        .then(r => r.json()).then(done).catch(reject);
+    } else {
+      reject(new Error('Backend not connected'));
+    }
+  });
+}
+async function call(fn, ...args) {
+  busy(true);
+  try { return await api(fn, ...args); }
+  catch (e) { toast(e.message || String(e)); throw e; }
+  finally { busy(false); }
+}
+if (!HAS_GAS && !API_URL) document.getElementById('setupBanner').classList.remove('hidden');
+
+/* ===================== Utilities ===================== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pct = v => v == null ? '—' : Math.round(v * 100) + '%';
+function busy(on) { $('loading').classList.toggle('hidden', !on); }
+let toastT;
+function toast(msg) {
+  let t = document.querySelector('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => t.style.display = 'none', 4200);
+}
+function show(viewId) { ['v-home', 'v-student', 'v-teacher'].forEach(v => $(v).classList.toggle('hidden', v !== viewId)); window.scrollTo(0, 0); }
+function confPicker(el, onPick) {
+  el.innerHTML = ''; el.dataset.v = '';
+  for (let i = 1; i <= 5; i++) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = i;
+    b.onclick = () => { el.dataset.v = i; [...el.children].forEach(c => c.classList.toggle('sel', c === b)); onPick && onPick(i); };
+    el.appendChild(b);
+  }
+}
+function exitApp() { stopSim(); S = null; T = null; $('who').textContent = ''; $('exitBtn').classList.add('hidden'); show('v-home'); }
+
+/* ===================== Figures (SVG) ===================== */
+const FIG = {
+  heater: () => `<svg viewBox="0 0 400 230" role="img" aria-label="Room with a heater near the floor">
+    <rect x="20" y="20" width="360" height="190" fill="#fbfaf6" stroke="#1f2a2c" stroke-width="3"/>
+    <rect x="40" y="168" width="70" height="40" rx="4" fill="#e9b28e" stroke="#1f2a2c" stroke-width="2"/>
+    ${[52,64,76,88,100].map(x=>`<line x1="${x}" y1="174" x2="${x}" y2="202" stroke="#a8432f" stroke-width="2"/>`).join('')}
+    <text x="75" y="160" text-anchor="middle" font-size="13" font-family="IBM Plex Sans">Heater</text>
+    <text x="230" y="110" text-anchor="middle" font-size="14" fill="#5d6a6b" font-family="IBM Plex Sans">Air in room</text>
+    <rect x="300" y="30" width="60" height="20" fill="#dde7f1" stroke="#1f2a2c"/><text x="330" y="65" text-anchor="middle" font-size="11" fill="#5d6a6b" font-family="IBM Plex Sans">window (closed)</text>
+    <text x="200" y="226" text-anchor="middle" font-size="11" fill="#5d6a6b" font-family="IBM Plex Sans">Diagram not drawn to scale</text></svg>`,
+  marker: () => `<svg viewBox="0 0 400 230" role="img" aria-label="Floating marker on a wave">
+    <path d="M20 120 Q 70 50 120 120 T 220 120 T 320 120 T 380 100" fill="none" stroke="#2f5f8f" stroke-width="3"/>
+    <line x1="20" y1="120" x2="380" y2="120" stroke="#1f2a2c" stroke-dasharray="5 5"/>
+    <text x="24" y="138" font-size="12" font-family="IBM Plex Sans">Mean position</text>
+    <line x1="230" y1="75" x2="300" y2="75" stroke="#5d6a6b" stroke-dasharray="3 3"/><text x="304" y="79" font-size="12" font-family="IBM Plex Sans">Highest position</text>
+    <line x1="230" y1="165" x2="300" y2="165" stroke="#5d6a6b" stroke-dasharray="3 3"/><text x="304" y="169" font-size="12" font-family="IBM Plex Sans">Lowest position</text>
+    <line x1="250" y1="78" x2="250" y2="162" stroke="#a8432f" stroke-width="2" marker-start="url(#ah)" marker-end="url(#ah)"/>
+    <text x="256" y="124" font-size="13" fill="#a8432f" font-family="IBM Plex Mono">8 cm</text>
+    <circle cx="70" cy="85" r="8" fill="#b97512" stroke="#1f2a2c"/><text x="84" y="80" font-size="12" font-family="IBM Plex Sans">marker</text>
+    <line x1="140" y1="205" x2="250" y2="205" stroke="#1f2a2c" stroke-width="2" marker-end="url(#ah)"/><text x="145" y="198" font-size="12" font-family="IBM Plex Sans">Wave travel</text>
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+    <text x="200" y="226" text-anchor="middle" font-size="11" fill="#5d6a6b" font-family="IBM Plex Sans">Diagram not drawn to scale</text></svg>`,
+  lightning: () => `<svg viewBox="0 0 400 230" role="img" aria-label="Lightning seen, thunder heard 2.5 s later">
+    <ellipse cx="80" cy="45" rx="60" ry="24" fill="#c9cfd3"/><ellipse cx="120" cy="38" rx="40" ry="20" fill="#bcc3c8"/>
+    <path d="M95 62 L78 110 L96 108 L80 160" fill="none" stroke="#b97512" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="330" cy="140" r="10" fill="#1f2a2c"/><line x1="330" y1="150" x2="330" y2="185" stroke="#1f2a2c" stroke-width="3"/>
+    <line x1="330" y1="185" x2="318" y2="208" stroke="#1f2a2c" stroke-width="3"/><line x1="330" y1="185" x2="342" y2="208" stroke="#1f2a2c" stroke-width="3"/>
+    <line x1="330" y1="162" x2="314" y2="176" stroke="#1f2a2c" stroke-width="3"/><line x1="330" y1="162" x2="346" y2="176" stroke="#1f2a2c" stroke-width="3"/>
+    <line x1="110" y1="190" x2="300" y2="190" stroke="#5d6a6b" stroke-dasharray="4 4" marker-end="url(#ah2)"/>
+    <text x="205" y="182" text-anchor="middle" font-size="13" font-family="IBM Plex Sans">distance = ?</text>
+    <text x="205" y="212" text-anchor="middle" font-size="12" fill="#5d6a6b" font-family="IBM Plex Sans">flash seen → thunder heard 2.5 s later · v = 340 m/s</text>
+    <defs><marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#5d6a6b"/></marker></defs></svg>`,
+  wavegraph: () => {
+    let d = ''; for (let i = 0; i <= 200; i++) { const x = i / 50; d += (i ? 'L' : 'M') + (40 + x * 80).toFixed(1) + ' ' + (100 - 50 * Math.sin(Math.PI * x)).toFixed(1); }
+    return `<svg viewBox="0 0 400 190" role="img" aria-label="Displacement against distance graph">
+      <line x1="40" y1="100" x2="380" y2="100" stroke="#1f2a2c"/><line x1="40" y1="30" x2="40" y2="170" stroke="#1f2a2c"/>
+      ${[0,1,2,3,4].map(i=>`<line x1="${40+i*80}" y1="100" x2="${40+i*80}" y2="106" stroke="#1f2a2c"/><text x="${40+i*80}" y="122" text-anchor="middle" font-size="12" font-family="IBM Plex Mono">${i}</text>`).join('')}
+      <path d="${d}" fill="none" stroke="#2f5f8f" stroke-width="2.5"/>
+      <text x="210" y="145" text-anchor="middle" font-size="12" font-family="IBM Plex Sans">Distance / m</text>
+      <text x="14" y="100" font-size="12" font-family="IBM Plex Sans" transform="rotate(-90 14 100)" text-anchor="middle">Displacement</text></svg>`;
+  }
+};
+
+/* ===================== Simulations (canvas) ===================== */
+let simRAF = null;
+function stopSim() { if (simRAF) cancelAnimationFrame(simRAF); simRAF = null; }
+function runSim(kind) {
+  stopSim();
+  const cv = $('sim'), g = cv.getContext('2d'), W = cv.width, H = cv.height;
+  const t0 = performance.now();
+  const caps = {
+    thermal: 'Convection current: air near the heater expands, becomes less dense and rises (red); cooler, denser air sinks (blue) and moves in to replace it.',
+    waves: 'The marker (orange) only moves up and down about the mean position. The wave travels across. Amplitude = mean position → highest point.',
+    sound: 'Particles vibrate back and forth about fixed positions, forming compressions and rarefactions. The highlighted particle never travels to the listener.'
+  };
+  $('simCap').textContent = caps[kind] || '';
+  const parts = Array.from({ length: 70 }, (_, i) => ({ u: i / 70, off: (Math.random() - .5) * 18 }));
+  function loopPt(u) { // rounded rectangle loop: up the left, across top, down right, back along floor
+    const L = [[110, 200], [110, 50], [560, 50], [560, 210], [110, 210]];
+    const seg = [150, 450, 160, 450]; const tot = seg.reduce((a, b) => a + b); let d = u * tot;
+    for (let i = 0; i < 4; i++) { if (d <= seg[i]) { const a = L[i], b = L[i + 1], f = d / seg[i]; return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, i]; } d -= seg[i]; }
+    return [110, 210, 3];
+  }
+  function frame(now) {
+    const t = (now - t0) / 1000;
+    g.clearRect(0, 0, W, H);
+    g.font = '13px IBM Plex Sans';
+    if (kind === 'thermal') {
+      g.strokeStyle = '#1f2a2c'; g.lineWidth = 3; g.strokeRect(30, 20, W - 60, H - 40);
+      g.fillStyle = '#e9b28e'; g.fillRect(60, H - 70, 80, 48); g.fillStyle = '#1f2a2c'; g.fillText('Heater', 76, H - 76);
+      parts.forEach(p => {
+        const u = (p.u + t * 0.05) % 1, [x, y, s] = loopPt(u);
+        const hot = s === 0 || s === 1 || (s === 2 && u < 0.62);
+        const warm = s === 0 ? 1 : s === 1 ? 0.85 - (u - 0.13) : s === 2 ? 0.3 : 0.1;
+        g.fillStyle = `rgb(${Math.round(70 + 150 * Math.max(0, Math.min(1, warm)))},${90},${Math.round(200 - 140 * Math.max(0, Math.min(1, warm)))})`;
+        const spread = hot ? 1.5 : 1;
+        g.beginPath(); g.arc(x + (s % 2 === 0 ? p.off * spread : 0), y + (s % 2 === 1 ? p.off * spread : 0), 4, 0, 7); g.fill();
+      });
+      g.fillStyle = '#a8432f'; g.fillText('warm, less dense air rises', 150, 90);
+      g.fillStyle = '#2f5f8f'; g.fillText('cool, denser air sinks', 440, 140);
+    } else if (kind === 'waves') {
+      const mid = H / 2, A = 60, k = 2 * Math.PI / 220, w = 2.2;
+      g.setLineDash([5, 5]); g.strokeStyle = '#999'; g.beginPath(); g.moveTo(20, mid); g.lineTo(W - 20, mid); g.stroke(); g.setLineDash([]);
+      g.strokeStyle = '#2f5f8f'; g.lineWidth = 3; g.beginPath();
+      for (let x = 20; x <= W - 20; x += 3) { const y = mid - A * Math.sin(k * x - w * t); x === 20 ? g.moveTo(x, y) : g.lineTo(x, y); }
+      g.stroke();
+      const mx = 300, my = mid - A * Math.sin(k * mx - w * t);
+      g.strokeStyle = '#a8432f'; g.lineWidth = 2; g.beginPath(); g.moveTo(mx + 40, mid); g.lineTo(mx + 40, mid - A); g.stroke();
+      g.fillStyle = '#a8432f'; g.fillText('amplitude', mx + 46, mid - A / 2);
+      g.strokeStyle = '#5d6a6b'; g.beginPath(); g.moveTo(mx - 60, mid - A); g.lineTo(mx - 60, mid + A); g.stroke();
+      g.fillStyle = '#5d6a6b'; g.fillText('highest → lowest', mx - 170, mid + 4);
+      g.fillStyle = '#b97512'; g.beginPath(); g.arc(mx, my, 9, 0, 7); g.fill();
+      g.fillStyle = '#1f2a2c'; g.fillText('wave travel →', W - 140, H - 16); g.fillText('mean position', 26, mid - 8);
+    } else {
+      const rows = 7, cols = 34, A = 9, k = 2 * Math.PI / 170, w = 4;
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        const x0 = 30 + c * 17.5, y = 50 + r * 24, x = x0 + A * Math.sin(k * x0 - w * t);
+        const hl = r === 3 && c === 15;
+        g.fillStyle = hl ? '#b97512' : '#2f5f8f'; g.beginPath(); g.arc(x, y, hl ? 6 : 4, 0, 7); g.fill();
+      }
+      const hx = 30 + 15 * 17.5; g.strokeStyle = '#b97512'; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(hx, 30); g.lineTo(hx, 220); g.stroke(); g.setLineDash([]);
+      g.fillStyle = '#1f2a2c'; g.fillText('source', 4, 24); g.fillText('listener →', W - 80, 24);
+      g.fillText('compressions: particles close · rarefactions: particles spread', 120, H - 12);
+    }
+    simRAF = requestAnimationFrame(frame);
+  }
+  simRAF = requestAnimationFrame(frame);
+}
+
+/* ===================== STUDENT FLOW ===================== */
+let S = null; // { sessionId, name, diagnostic, challenge, progress, startedTaskAt, idleSent }
+const RAIL = ['Warm-up', 'Challenge 1', 'Challenge 2', 'Challenge 3', 'Transfer', 'Reflection', 'Summary'];
+function rail(idx) {
+  $('rail').innerHTML = RAIL.map((r, i) => `<div class="st ${i < idx ? 'done' : i === idx ? 'on' : ''}">${r}</div>`).join('');
+}
+function stage(id) { ['s-diag', 's-chal', 's-cons', 's-trans', 's-refl', 's-sum'].forEach(s => $(s).classList.toggle('hidden', s !== id)); window.scrollTo(0, 0); }
+
+async function studentStart() {
+  const name = $('sName').value.trim(), cls = $('sClass').value.trim();
+  if (name.length < 2 || !cls) return toast('Please enter your name and class.');
+  const r = await call('startSession', name, cls);
+  S = { sessionId: r.sessionId, name: r.name };
+  $('who').textContent = r.name + ' · ' + cls.toUpperCase(); $('exitBtn').classList.remove('hidden');
+  show('v-student'); rail(0); stage('s-diag');
+  $('diagQs').innerHTML = r.diagnostic.map((d, i) => `
+    <div class="mcq"><div><b>${i + 1}.</b> ${esc(d.stem)}</div>
+    ${d.figure ? `<div class="fig" style="max-width:420px">${FIG[d.figure]()}</div>` : ''}
+    <div class="opts">${Object.entries(d.options).map(([k, v]) => `<label class="opt"><input type="radio" name="d_${d.id}" value="${k}" onchange="markOpt(this)"><b>${k}</b><span>${esc(v)}</span></label>`).join('')}</div></div>`).join('');
+  S.diagIds = r.diagnostic.map(d => d.id);
+  confPicker($('preConf'));
+}
+function markOpt(inp) { inp.closest('.opts').querySelectorAll('.opt').forEach(o => o.classList.toggle('sel', o.contains(inp) && inp.checked)); }
+
+async function submitDiag() {
+  const answers = {};
+  for (const id of S.diagIds) { const c = document.querySelector(`input[name="d_${id}"]:checked`); if (!c) return toast('Answer all three warm-up questions.'); answers[id] = c.value; }
+  if (!$('preConf').dataset.v) return toast('Choose how confident you feel (1–5).');
+  const r = await call('submitDiagnostic', S.sessionId, answers, Number($('preConf').dataset.v));
+  loadChallenge(r.next);
+}
+
+function loadChallenge(c) {
+  S.challenge = c; S.startedTaskAt = Date.now(); S.idleSent = false; S.lastInput = Date.now();
+  rail(1 + c.index); stage('s-chal');
+  $('cEyebrow').textContent = `Challenge ${c.index + 1} of ${c.total} · ${c.domainLabel}`;
+  $('cTitle').textContent = c.title;
+  $('cFig').innerHTML = FIG[c.figure] ? FIG[c.figure]() : '';
+  $('cContext').textContent = c.context;
+  $('cSource').textContent = 'Adapted from Practice Set 2, ' + c.source + ' · ' + c.marks + ' marks';
+  $('predQ').textContent = c.prediction.q;
+  $('predOpts').innerHTML = c.prediction.options.map((o, i) => `<label class="opt"><input type="radio" name="pred" value="${esc(o)}" onchange="markOpt(this);predDone()"><span>${esc(o)}</span></label>`).join('');
+  $('parts').innerHTML = c.parts.map(p => `<div class="part"><div class="q">(${p.id}) ${esc(p.prompt)}<span class="mk">[${p.marks}]</span></div>
+     <textarea id="part_${p.id}" oninput="S.lastInput=Date.now()" placeholder="Your reasoning…"></textarea></div>`).join('');
+  confPicker($('attConf'));
+  $('fbBox').classList.add('hidden'); $('probeCard').classList.add('hidden');
+  $('attCard').classList.remove('hidden'); $('hintCard').classList.remove('hidden');
+  $('attLabel').textContent = 'Step 2 · Your attempt'; $('attBtn').textContent = 'Submit attempt';
+  setAttemptEnabled(false);
+  renderProgress(c.progress || { attempts: 0, hintsUsed: 0, hintsUnlocked: [], nextHintAvailable: false, status: 'struggle' });
+  if (c.progress && c.progress.attempts) { predDone(); restoreParts(c.progress.lastParts); }
+}
+function predDone() { $('predCard').style.opacity = .7; setAttemptEnabled(true); }
+function setAttemptEnabled(on) {
+  $('attCard').style.opacity = on ? 1 : .55;
+  $('attCard').querySelectorAll('textarea,button').forEach(el => el.disabled = !on);
+  $('attNote').textContent = on ? 'Write your own reasoning. Partial ideas are welcome.' : 'Make your prediction first.';
+}
+function restoreParts(parts) { if (!parts) return; Object.entries(parts).forEach(([k, v]) => { const el = $('part_' + k); if (el) el.value = v; }); }
+
+function renderProgress(p) {
+  S.progress = p;
+  $('history').innerHTML = p.attempts ? `<span>attempts ${p.attempts}</span><span>hints ${p.hintsUsed}/3</span>` : '';
+  const names = ['Conceptual nudge', 'Guided reasoning', 'Partial scaffold'];
+  $('ladder').innerHTML = [1, 2, 3].map(n => {
+    const h = p.hintsUnlocked.find(x => x.tier === n);
+    return h ? `<div class="hint open"><div class="tier">Hint ${n}</div><pre>${esc(h.text.replace(/^[^—]+—\s*/, ''))}</pre></div>`
+             : `<div class="hint locked"><div class="tier">Hint ${n} · ${names[n - 1]}</div><span class="small">Locked</span></div>`;
+  }).join('');
+  $('hintBtn').disabled = !p.nextHintAvailable;
+  $('hintRule').textContent = !p.attempts ? 'Hints unlock after your first attempt.'
+    : p.hintsUsed >= 3 ? 'All hints are open. Use them to revise your answer.'
+    : p.nextHintAvailable ? `Hint ${p.hintsUsed + 1} is available. You can also revise without it.`
+    : 'Revise your answer using the hint to unlock the next one.';
+}
+
+async function submitAttempt() {
+  const c = S.challenge, parts = {};
+  c.parts.forEach(p => parts[p.id] = $('part_' + p.id).value);
+  if (!$('attConf').dataset.v) return toast('Rate your confidence (1–5) before submitting.');
+  const pred = document.querySelector('input[name="pred"]:checked');
+  const r = await call('submitAttempt', S.sessionId, c.id, {
+    parts, confidence: Number($('attConf').dataset.v), prediction: pred ? pred.value : '',
+    timeSec: Math.round((Date.now() - S.startedTaskAt) / 1000)
+  });
+  if (r.status === 'need_attempt') { fb('notice', r.message); return; }
+  renderProgress(r.progress);
+  confPicker($('attConf'));
+  if (r.status === 'sufficient') {
+    fb('ok', 'Your reasoning covers the key ideas.', r.eval);
+    $('attCard').classList.add('hidden'); $('hintCard').classList.add('hidden');
+    $('probeQ').textContent = r.probe; $('probeA').value = ''; $('probeCard').classList.remove('hidden');
+  } else if (r.status === 'move_on') {
+    fb('move', r.message, r.eval);
+    $('attCard').classList.add('hidden'); $('hintCard').classList.add('hidden');
+  } else {
+    fb('think', r.question, r.eval, r.reflect);
+    $('attLabel').textContent = `Step 3 · Revise (attempt ${r.progress.attempts + 1})`; $('attBtn').textContent = 'Submit revised attempt';
+  }
+}
+function dots(ev) { return `<span class="dots">${Array.from({ length: ev.pointsTotal }, (_, i) => `<i class="${i < ev.pointsMet ? 'on' : ''}"></i>`).join('')}</span>`; }
+function fb(kind, text, ev, reflect) {
+  const box = $('fbBox'); box.classList.remove('hidden');
+  if (kind === 'notice') { box.innerHTML = `<div class="notice">${esc(text)}</div>`; return; }
+  const meter = ev ? `<div class="small muted">Key ideas found ${dots(ev)} ${ev.pointsMet} of ${ev.pointsTotal}</div>` : '';
+  if (kind === 'think') box.innerHTML = `<div class="eyebrow">Think about this</div><p class="q">${esc(text)}</p>${reflect ? `<p class="small muted">${esc(reflect)}</p>` : ''}${meter}`;
+  if (kind === 'ok') box.innerHTML = `<div class="eyebrow" style="color:var(--green)">Well reasoned</div><p class="q">${esc(text)}</p>${meter}`;
+  if (kind === 'move') box.innerHTML = `<div class="eyebrow">Time to consolidate</div><p class="q">${esc(text)}</p>${meter}<button class="btn" style="margin-top:8px" onclick="loadCons()">Compare with the physics</button>`;
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+async function openHint() {
+  const r = await call('requestHint', S.sessionId, S.challenge.id);
+  if (!r.granted) return toast(r.message);
+  renderProgress(r.progress);
+}
+async function submitProbe() {
+  const r = await call('submitProbe', S.sessionId, S.challenge.id, $('probeA').value);
+  if (r.status === 'need_attempt') return toast(r.message);
+  loadCons();
+}
+
+async function loadCons() {
+  const k = await call('getConsolidation', S.sessionId, S.challenge.id);
+  stage('s-cons');
+  const fmt = p => p ? k.parts.map(x => `(${x.id}) ${p[x.id] || '—'}`).join('\n\n') : '—';
+  $('kEyebrow').textContent = k.domainLabel + ' · ' + k.title;
+  $('kIntro').textContent = `You made ${k.attempts} attempt${k.attempts === 1 ? '' : 's'} and used ${k.hintsUsed} hint${k.hintsUsed === 1 ? '' : 's'}.` + (k.prediction ? ` You predicted: “${k.prediction}”.` : '');
+  $('kFirst').textContent = fmt(k.first); $('kLast').textContent = fmt(k.last); $('kModel').textContent = k.model;
+  $('kCheck').innerHTML = `<li><span class="h">First</span><span class="h">Final</span><span class="h">Key idea</span></li>` +
+    k.checklist.map(c => `<li><span class="tick ${c.firstMet ? 'y' : 'n'}">${c.firstMet ? '✓' : '○'}</span><span class="tick ${c.lastMet ? 'y' : 'n'}">${c.lastMet ? '✓' : '○'}</span><span>${esc(c.text)}</span></li>`).join('');
+  $('kMis').innerHTML = k.misconceptions.length ? k.misconceptions.map(m =>
+    `<div class="notice ${m.stillPresent ? 'red' : 'green'}" style="margin-bottom:6px"><b>${m.stillPresent ? 'Watch out:' : 'You moved past:'}</b> ${esc(m.label)}</div>`).join('') : '';
+  $('kWorked').innerHTML = k.worked.map(w => `<li>${esc(w)}</li>`).join('');
+  $('kSelf').value = '';
+  runSim(k.domain);
+}
+async function submitCons() {
+  const r = await call('submitConsolidation', S.sessionId, S.challenge.id, $('kSelf').value);
+  if (r.status === 'need_attempt') return toast(r.message);
+  stopSim();
+  if (r.next === 'challenge') loadChallenge(r.challenge); else loadTransfer(r.transfer);
+}
+
+function loadTransfer(items) {
+  rail(4); stage('s-trans'); S.transferIds = items.map(i => i.id); S.transferStart = Date.now();
+  $('transQs').innerHTML = items.map((t, i) => `<div class="card" style="margin-bottom:14px;box-shadow:none">
+    <div class="eyebrow">${esc(t.domainLabel)} · ${t.marks} marks</div>
+    <p style="white-space:pre-wrap"><b>${i + 1}.</b> ${esc(t.prompt)}</p>
+    <textarea id="tr_${t.id}" placeholder="Your answer, with working…"></textarea>
+    <label class="fld">Confidence</label><div class="conf" id="trc_${t.id}"></div></div>`).join('');
+  items.forEach(t => confPicker($('trc_' + t.id)));
+}
+async function submitTransfer() {
+  const answers = {}, confs = {};
+  for (const id of S.transferIds) {
+    answers[id] = $('tr_' + id).value.trim(); confs[id] = Number($('trc_' + id).dataset.v || 0);
+    if (answers[id].length < 3) return toast('Attempt every transfer question — your best try is enough.');
+    if (!confs[id]) return toast('Rate your confidence for each question.');
+  }
+  await call('submitTransfer', S.sessionId, answers, confs, Math.round((Date.now() - S.transferStart) / 1000));
+  rail(5); stage('s-refl'); confPicker($('postConf'));
+}
+async function submitReflection() {
+  if (!$('postConf').dataset.v) return toast('Rate your confidence now (1–5).');
+  const r = await call('submitReflection', S.sessionId, $('rText').value, Number($('postConf').dataset.v));
+  if (r.status === 'need_attempt') return toast(r.message);
+  rail(6); stage('s-sum');
+  const bar = (lab, v, cls) => `<div class="bar"><span>${lab}</span><div class="tr"><div class="fl ${cls}" style="width:${v == null ? 0 : Math.round(v * 100)}%"></div></div><span class="mono">${pct(v)}</span></div>`;
+  $('s-sum').innerHTML = `<div class="eyebrow">Learning summary</div><h2>Well done, ${esc(r.name)}.</h2>
+    <p class="muted">Confidence: ${r.preConfidence || '—'}/5 at the start → ${r.postConfidence || '—'}/5 now. Your teacher can see this summary and may follow up with you.</p>
+    <div class="grid2" style="grid-template-columns:repeat(3,minmax(0,1fr))">${r.domains.map(d => `<div class="dom">
+      <h3>${esc(d.label)}</h3><div class="bars">${bar('First attempt', d.first, 'first')}${bar('Final attempt', d.final, '')}${bar('New problem', d.transfer, 'transfer')}</div>
+      <p class="small muted" style="margin-top:8px">Hints used: ${d.hints}</p>
+      ${d.resolved.length ? `<p class="small"><b>You moved past:</b> ${d.resolved.map(esc).join('; ')}</p>` : ''}
+      ${d.toRevisit.length ? `<p class="small"><b>Worth revisiting:</b> ${d.toRevisit.map(esc).join('; ')}</p>` : ''}</div>`).join('')}</div>
+    <button class="btn ghost" onclick="exitApp()">Finish</button>`;
+}
+
+// Inactivity during the struggle phase → one teacher flag per challenge.
+setInterval(() => {
+  if (!S || !S.challenge || $('s-chal').classList.contains('hidden') || S.idleSent) return;
+  const idle = (Date.now() - (S.lastInput || Date.now())) / 1000;
+  if (idle >= 180) { S.idleSent = true; api('logEvent', S.sessionId, S.challenge.id, 'idle', { seconds: Math.round(idle) }).catch(() => {}); }
+}, 15000);
+
+/* ===================== TEACHER DASHBOARD ===================== */
+let T = null; // { pw, data, concept, selected }
+const DOMS = [['thermal', 'Thermal'], ['waves', 'Waves'], ['sound', 'Sound']];
+
+async function teacherStart() {
+  const pw = $('tPass').value;
+  await call('teacherLogin', pw);
+  T = { pw, concept: 'all', selected: null, cls: 'ALL' };
+  $('who').textContent = 'Teacher'; $('exitBtn').classList.remove('hidden');
+  show('v-teacher');
+  $('tConcept').innerHTML = [['all', 'All'], ...DOMS].map(([k, l]) => `<button class="tab ${k === 'all' ? 'on' : ''}" data-c="${k}" onclick="setConcept('${k}')">${l}</button>`).join('');
+  await loadDash();
+}
+function tTab(t) {
+  document.querySelectorAll('.tabs .tab[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  ['overview', 'interventions', 'curriculum'].forEach(x => $('t-' + x).classList.toggle('hidden', x !== t));
+  if (t === 'interventions') renderIv();
+  if (t === 'curriculum') loadCurriculum();
+}
+function setConcept(k) { T.concept = k; document.querySelectorAll('#tConcept .tab').forEach(b => b.classList.toggle('on', b.dataset.c === k)); renderDash(); }
+
+async function loadDash() {
+  const sel = $('tClass').value || T.cls; T.cls = sel || 'ALL';
+  T.data = await call('getDashboard', T.pw, T.cls);
+  $('tClass').innerHTML = ['ALL', ...T.data.classes].map(c => `<option value="${esc(c)}" ${c === T.cls ? 'selected' : ''}>${c === 'ALL' ? 'All classes' : esc(c)}</option>`).join('');
+  if (T.data.dbUrl) $('tSheet').href = T.data.dbUrl;
+  renderDash();
+}
+function thr() { return Number($('tThr').value); }
+function domStatus(D, threshold) {
+  if (!D || D.mastery == null) return 'none';
+  const persistAfterHint3 = D.hints >= 3 && D.current.length > 0;
+  const failedTransfer = D.transfer != null && D.transfer < 0.5;
+  if (D.mastery < threshold || failedTransfer || persistAfterHint3) return 'priority';
+  if (D.mastery >= Math.max(80, threshold + 10) && D.hints <= 1 && !D.current.length) return 'secure';
+  return 'developing';
+}
+const hardFlags = st => st.flags.filter(f => !f.soft);
+function needsReview(st) { return DOMS.some(([d]) => domStatus(st.domains[d], thr()) === 'priority') || hardFlags(st).length > 0; }
+function recommend(st, d) {
+  const D = st.domains[d], s = domStatus(D, thr()), M = T.data.misconceptions;
+  const code = D.current[0] || (s === 'priority' ? D.seen[0] : null);
+  if (s === 'priority') return code && M[code]
+    ? { code, strategy: 'Small-group / individual remediation — ' + M[code].remediation + '. Direct explanation, demonstration, guided practice.', followUp: M[code].followUp }
+    : { code: '', strategy: 'Small-group remediation: direct teacher explanation, physical demonstration and guided practice.', followUp: 'Retest with a new ' + d + ' problem' };
+  if (s === 'developing') return { code: code || '', strategy: 'Targeted independent practice: a similar problem, then gradually remove prompts.' + (code && M[code] ? ' Focus: ' + M[code].label + '.' : ''), followUp: code && M[code] ? M[code].followUp : 'Similar problem without hints' };
+  if (s === 'secure') return { code: '', strategy: 'Independent transfer challenge in an unfamiliar context (extension).', followUp: 'Novel application problem' };
+  return { code: '', strategy: '—', followUp: '' };
+}
+function avg(arr) { const a = arr.filter(v => v != null); return a.length ? a.reduce((x, y) => x + y, 0) / a.length : null; }
+
+function renderDash() {
+  $('tThrV').textContent = thr() + '%';
+  const st = T.data.students, threshold = thr();
+  const mastery = d => avg(st.map(s => s.domains[d].mastery));
+  const review = st.filter(needsReview).length;
+  const hints = avg(st.map(s => DOMS.reduce((a, [d]) => a + s.domains[d].hints, 0)));
+  const gain = avg(st.flatMap(s => DOMS.map(([d]) => { const D = s.domains[d]; return D.transfer != null && D.first != null ? D.transfer - D.first : null; })));
+  const done = st.filter(s => s.stage === 'complete').length;
+  $('tKpis').innerHTML = [
+    ...DOMS.map(([d, l]) => [mastery(d) == null ? '—' : Math.round(mastery(d)) + '%', l + ' mastery']),
+    [`${review} / ${st.length}`, 'students needing review'],
+    [hints == null ? '—' : hints.toFixed(1) + ' / 9', 'avg hints per student'],
+    [gain == null ? '—' : (gain >= 0 ? '+' : '') + Math.round(gain * 100) + ' pts', `learning gain (first → transfer) · ${done} complete`]
+  ].map(([v, l]) => `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+
+  if (!st.length) { $('tHeat').innerHTML = '<p class="muted">No learners yet. Share the web-app link with students, or run seedDemoData() in the editor to explore with synthetic data.</p>'; $('tClusters').innerHTML = ''; return; }
+  const rows = st.filter(s => T.concept === 'all' || domStatus(s.domains[T.concept], threshold) !== 'none')
+    .sort((a, b) => (needsReview(b) - needsReview(a)) || String(a.name).localeCompare(b.name));
+  $('tHeat').innerHTML = `<table class="hm"><thead><tr><th>Student</th>${DOMS.map(([, l]) => `<th>${l}</th>`).join('')}<th>Hints</th><th>Stage</th></tr></thead><tbody>
+    ${rows.map(s => `<tr class="click ${T.selected === s.studentId ? 'sel' : ''}" onclick="selectStudent('${s.studentId}')">
+      <td><b>${esc(s.name)}</b> ${hardFlags(s).length ? '<span title="Escalation flag" style="color:var(--red)">⚑</span>' : ''}<div class="small muted">${esc(s.class)}</div></td>
+      ${DOMS.map(([d]) => { const D = s.domains[d], c = domStatus(D, threshold); return `<td><span class="cell ${c} ${T.concept !== 'all' && T.concept !== d ? 'dim' : ''}">${D.mastery == null ? '—' : D.mastery + '%'}</span></td>`; }).join('')}
+      <td class="mono">${DOMS.reduce((a, [d]) => a + s.domains[d].hints, 0)}</td>
+      <td><span class="pill ${s.stage === 'complete' ? 'teal' : 'none'}">${esc(s.stage)}</span></td></tr>`).join('')}</tbody></table>`;
+
+  const counts = {};
+  st.forEach(s => DOMS.forEach(([d]) => s.domains[d].current.forEach(c => { if (T.concept !== 'all' && T.concept !== d) return; (counts[c] = counts[c] || []).push(s.name); })));
+  const entries = Object.entries(counts).sort((a, b) => b[1].length - a[1].length);
+  $('tClusters').innerHTML = entries.length ? entries.map(([c, names]) => `<div class="cluster"><span class="mono"><b>${c}</b></span>
+     <div><div>${esc(T.data.misconceptions[c].label)}</div><div class="bx"><i style="width:${Math.round(100 * names.length / st.length)}%"></i></div>
+     <div class="small muted">${names.map(esc).join(', ')} · <i>${esc(T.data.misconceptions[c].remediation)}</i></div></div>
+     <span class="mono">${names.length}</span></div>`).join('') : '<p class="muted small">No unresolved misconceptions in the latest evidence.</p>';
+  if (T.selected) renderDetail();
+}
+
+function selectStudent(id) { T.selected = id; renderDash(); renderDetail(); }
+function renderDetail() {
+  const s = T.data.students.find(x => x.studentId === T.selected); if (!s) return;
+  const M = T.data.misconceptions, threshold = thr();
+  const ivs = T.data.interventions.filter(i => i.studentId === s.studentId);
+  const domCards = DOMS.map(([d, l]) => {
+    const D = s.domains[d], st = domStatus(D, threshold), rec = recommend(s, d);
+    if (D.mastery == null) return `<div class="dom"><div class="hd"><h3>${l}</h3><span class="pill none">no evidence yet</span></div></div>`;
+    return `<div class="dom"><div class="hd"><h3 style="margin:0">${l} <span class="mono" style="font-weight:500">${D.mastery}%</span></h3><span class="pill ${st}">${st === 'priority' ? 'Review suggested' : st === 'secure' ? 'Secure' : 'Developing'}</span></div>
+      <div class="kv"><div>Diagnostic<b>${pct(D.diag)}</b></div><div>First attempt<b>${pct(D.first)}</b></div><div>Final attempt<b>${pct(D.final)}</b></div><div>Transfer<b>${pct(D.transfer)}</b></div>
+      <div>Hints<b>${D.hints} / 3</b></div><div>Attempts<b>${D.attempts}</b></div><div>Confidence<b>${D.confFirst || '—'} → ${D.confLast || '—'}</b></div><div>Time<b>${D.timeSec ? Math.round(D.timeSec / 60) + ' min' : '—'}</b></div></div>
+      ${D.seen.length ? `<div class="small">Misconceptions: ${D.seen.map(c => `<span class="mtag ${D.current.indexOf(c) < 0 ? 'ok' : ''}" title="${esc(M[c].label)}">${c}</span>`).join('')}<span class="muted">${D.current.map(c => esc(M[c].label)).join('; ')}</span></div>` : ''}
+      ${D.flags.length ? `<div class="small" style="color:var(--red);margin-top:4px">⚑ ${D.flags.map(f => esc(f.reason)).join(' · ')}</div>` : ''}
+      <details style="margin-top:6px"><summary>Evidence (${D.evidence.length} attempts${D.transferText ? ' + transfer' : ''})</summary>
+        ${D.prediction ? `<div class="ev"><b>Prediction:</b> ${esc(D.prediction)}</div>` : ''}
+        ${D.evidence.map(e => `<div class="ev"><b>Attempt ${e.n}</b> · ${e.score}/${e.max} · hints before: ${e.hintsBefore} ${e.misconceptions.map(c => `<span class="mtag">${c}</span>`).join('')}<br>${esc(e.text)}</div>`).join('')}
+        ${D.probe ? `<div class="ev"><b>Probe:</b> ${esc(D.probe)}</div>` : ''}
+        ${D.selfExplanation ? `<div class="ev"><b>Self-explanation:</b> ${esc(D.selfExplanation)}</div>` : ''}
+        ${D.transferText ? `<div class="ev"><b>Transfer:</b> ${esc(D.transferText)}</div>` : ''}
+      </details>
+      <div style="margin-top:10px;border-top:1px dashed var(--line);padding-top:10px">
+        <div class="eyebrow">Suggested teacher response</div>
+        <textarea id="rs_${d}" style="min-height:60px" data-orig="${esc(rec.strategy)}">${esc(rec.strategy)}</textarea>
+        <input type="text" id="rf_${d}" value="${esc(rec.followUp)}" placeholder="Follow-up assessment" style="margin-top:6px" data-orig="${esc(rec.followUp)}">
+        <input type="text" id="rn_${d}" placeholder="Note (optional)" style="margin-top:6px">
+        <div class="row" style="margin-top:8px">
+          <button class="btn sm" onclick="saveIv('${d}','accept','${rec.code}')">Assign</button>
+          <button class="btn ghost sm" onclick="saveIv('${d}','reject','${rec.code}')">Reject</button>
+          <span class="small muted">Editing the text before assigning records it as “modified”.</span>
+        </div>
+      </div></div>`;
+  }).join('');
+  $('tDetail').innerHTML = `<div class="row" style="justify-content:space-between"><div><div class="eyebrow">Individual learner diagnosis</div><h2 style="margin:0">${esc(s.name)}</h2>
+      <div class="small muted">${esc(s.class)} · overall confidence ${s.preConfidence || '—'} → ${s.postConfidence || '—'} / 5 · stage: ${esc(s.stage)}</div></div></div>
+    ${s.reflection ? `<div class="ev" style="margin:10px 0"><b>Reflection:</b> ${esc(s.reflection)}</div>` : ''}
+    ${domCards}
+    ${ivs.length ? `<h3>Interventions</h3>${ivs.map(i => `<div class="ev"><b>${esc(i.domain)}</b> · <span class="pill ${i.status === 'rejected' ? 'none' : 'teal'}">${esc(i.status)}</span> ${i.outcome ? '· outcome: <b>' + esc(i.outcome) + '</b>' : ''}<br>${esc(i.strategy)}</div>`).join('')}` : ''}`;
+  $('tDetail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+async function saveIv(d, action, code) {
+  const s = T.data.students.find(x => x.studentId === T.selected);
+  const strat = $('rs_' + d), fu = $('rf_' + d);
+  const modified = strat.value.trim() !== strat.dataset.orig.trim() || fu.value.trim() !== fu.dataset.orig.trim();
+  const status = action === 'reject' ? 'rejected' : modified ? 'modified' : 'assigned';
+  const row = await call('saveIntervention', T.pw, { studentId: s.studentId, name: s.name, class: s.class, domain: d, code,
+    strategy: strat.value, followUp: fu.value, note: $('rn_' + d).value, status });
+  T.data.interventions.push(row);
+  toast(status === 'rejected' ? 'Recommendation rejected and logged.' : 'Remediation ' + status + ' for ' + s.name + '.');
+  renderDetail();
+}
+function renderIv() {
+  const ivs = (T.data && T.data.interventions) || [];
+  $('tIvList').innerHTML = ivs.length ? `<table class="plain"><thead><tr><th>Student</th><th>Concept</th><th>Strategy</th><th>Follow-up</th><th>Status</th><th>Outcome</th></tr></thead><tbody>
+    ${ivs.slice().reverse().map(i => `<tr><td><b>${esc(i.name)}</b><div class="small muted">${esc(i.class)}</div></td><td>${esc(i.domain)} ${i.code ? `<span class="mtag">${esc(i.code)}</span>` : ''}</td>
+      <td>${esc(i.strategy)}${i.note ? `<div class="small muted">${esc(i.note)}</div>` : ''}</td><td>${esc(i.followUp)}</td>
+      <td><span class="pill ${i.status === 'rejected' ? 'none' : 'teal'}">${esc(i.status)}</span></td>
+      <td>${i.outcome ? `<b>${esc(i.outcome)}</b>` : i.status === 'rejected' ? '—' : `<select onchange="setOutcome('${i.interventionId}',this.value)"><option value="">Record retest…</option><option value="resolved">Resolved</option><option value="partly resolved">Partly resolved</option><option value="not resolved">Not resolved</option></select>`}</td></tr>`).join('')}
+    </tbody></table>` : '<p class="muted">No interventions yet. Assign one from a student’s diagnosis panel.</p>';
+}
+async function setOutcome(id, outcome) {
+  if (!outcome) return;
+  await call('recordOutcome', T.pw, id, outcome, '');
+  const i = T.data.interventions.find(x => x.interventionId === id); if (i) { i.outcome = outcome; i.status = 'completed'; }
+  renderIv(); toast('Outcome recorded.');
+}
+async function loadCurriculum() {
+  if (T.curr) return renderCurriculum();
+  T.curr = await call('getCurriculum', T.pw); renderCurriculum();
+}
+function renderCurriculum() {
+  const c = T.curr;
+  $('t-curriculum').innerHTML = `
+    <div class="card" style="margin-bottom:14px"><h3>Progression rules (enforced by the server)</h3><ul class="small">${Object.values(c.rules).map(r => `<li>${esc(r)}</li>`).join('')}</ul></div>
+    <div class="grid2" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:14px">${Object.entries(c.domains).map(([k, d]) => `<div class="card"><div class="eyebrow">${esc(k)}</div><h3>${esc(d.label)}</h3>
+      <ul class="small">${d.outcomes.map(o => `<li>${esc(o)}</li>`).join('')}</ul>
+      <div class="small">${Object.entries(c.misconceptions).filter(([, m]) => m.domain === k).map(([code, m]) => `<div style="margin:4px 0"><span class="mtag">${code}</span>${esc(m.label)}</div>`).join('')}</div></div>`).join('')}</div>
+    ${c.challenges.map(ch => `<div class="card" style="margin-bottom:14px"><div class="eyebrow">${ch.id} · ${esc(ch.source)} · ${esc(ch.domain)}</div><h3>${esc(ch.title)}</h3>
+      <p class="small">${esc(ch.context)}</p>
+      <div class="grid2"><div><b class="small">Rubric</b><ul class="small">${ch.rubric.map(r => `<li>[${r.marks}] ${esc(r.text)}</li>`).join('')}</ul>
+        <b class="small">Model answer</b><pre class="small" style="white-space:pre-wrap;font:inherit">${esc(ch.model)}</pre></div>
+      <div><b class="small">Three-hint ladder</b>${ch.hints.map((h, i) => `<div class="hint open" style="margin:6px 0"><div class="tier">Hint ${i + 1}</div><pre class="small">${esc(h)}</pre></div>`).join('')}
+        <b class="small">Probe (if reasoning is sufficient)</b><p class="small">${esc(ch.probe)}</p></div></div></div>`).join('')}
+    <div class="card"><h3>Transfer items (no hints)</h3>${c.transfer.map(t => `<div class="ev"><b>${t.id} · ${esc(t.domain)}</b><br><span style="white-space:pre-wrap">${esc(t.prompt)}</span><br><span class="muted small">Model: ${esc(t.model)}</span></div>`).join('')}</div>
+    <p class="small muted" style="margin-top:10px">The problem bank lives at the top of code.gs. Edit it there and redeploy to change questions, rubrics, hints or misconception tags.</p>`;
+}
+
+/* ===================== Init ===================== */
+$('heroFig').innerHTML = FIG.marker();
+$('sClass').addEventListener('keydown', e => { if (e.key === 'Enter') studentStart(); });
+</script>
+</body>
+</html>
